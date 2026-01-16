@@ -156,17 +156,31 @@ const App: React.FC = () => {
 
   const getSearchUrl = (type: 'youtube' | 'google') => {
     if (!chord) return '#';
+    
     let songTerm = "";
     if (chord.nativeName && isHebrew(chord.nativeName)) {
       songTerm = chord.nativeName;
-      if (chord.nativeArtistName && isHebrew(chord.nativeArtistName)) songTerm += ` ${chord.nativeArtistName}`;
+      if (chord.nativeArtistName && isHebrew(chord.nativeArtistName)) {
+        songTerm += ` ${chord.nativeArtistName}`;
+      }
     } else {
       songTerm = chord.isSongMatch ? `${chord.chordName} ${chord.artistName || ''}` : chord.chordName;
     }
+
     const hasHebrew = isHebrew(songTerm);
-    if (hasHebrew) songTerm = songTerm.replace(/[^\u0590-\u05FF0-9\s]/g, '').replace(/\s+/g, ' ').trim();
-    if (type === 'youtube') return `https://www.youtube.com/results?search_query=${encodeURIComponent(songTerm + (hasHebrew ? ' מדריך גיטרה' : ' guitar tutorial'))}`;
-    if (type === 'google') return `https://www.google.com/search?q=${encodeURIComponent(songTerm + (hasHebrew ? ' אקורדים וטאבים' : ' guitar chords'))}`;
+    
+    if (hasHebrew) {
+      songTerm = songTerm.replace(/[^\u0590-\u05FF0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+    }
+    
+    if (type === 'youtube') {
+      const suffix = hasHebrew ? ' מדריך גיטרה' : ' guitar tutorial';
+      return `https://www.youtube.com/results?search_query=${encodeURIComponent(songTerm + suffix)}`;
+    }
+    if (type === 'google') {
+      const suffix = hasHebrew ? ' אקורדים וטאבים' : ' guitar chords';
+      return `https://www.google.com/search?q=${encodeURIComponent(songTerm + suffix)}`;
+    }
     return '#';
   };
 
@@ -175,323 +189,386 @@ const App: React.FC = () => {
     localStorage.removeItem('chordmaster_history');
   };
 
-  const songHeader = useMemo(() => {
-    if (!chord) return null;
-    const hasHebrewTitle = chord.nativeName && isHebrew(chord.nativeName);
-    const hasHebrewArtist = chord.nativeArtistName && isHebrew(chord.nativeArtistName);
-    return {
-      mainTitle: hasHebrewTitle ? chord.nativeName : chord.chordName,
-      subTitle: hasHebrewTitle ? chord.chordName : "",
-      mainArtist: hasHebrewArtist ? chord.nativeArtistName : (chord.artistName || ""),
-      subArtist: hasHebrewArtist ? (chord.artistName || "") : ""
-    };
+  const primaryTitle = useMemo(() => {
+    if (!chord) return "";
+    if (chord.nativeName && isHebrew(chord.nativeName)) return chord.nativeName;
+    return chord.chordName;
   }, [chord]);
 
+  const secondaryTitle = useMemo(() => {
+    if (!chord) return "";
+    const name = chord.chordName;
+    return name !== primaryTitle ? name : (chord.nativeName !== primaryTitle && chord.nativeName ? chord.nativeName : "");
+  }, [chord, primaryTitle]);
+
+  const primaryArtist = useMemo(() => {
+    if (!chord) return "";
+    if (chord.nativeArtistName && isHebrew(chord.nativeArtistName)) return chord.nativeArtistName;
+    return chord.artistName || "";
+  }, [chord]);
+
+  const secondaryArtist = useMemo(() => {
+    if (!chord) return "";
+    const name = chord.artistName || "";
+    return name !== primaryArtist ? name : (chord.nativeArtistName !== primaryArtist && chord.nativeArtistName ? chord.nativeArtistName : "");
+  }, [chord, primaryArtist]);
+
   return (
-    <div className="min-h-screen bg-[#05070a] text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 overflow-x-hidden">
-      {/* Dynamic Background Effects */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-indigo-600/10 blur-[150px] rounded-full" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-emerald-600/5 blur-[120px] rounded-full" />
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 overflow-x-hidden">
+      <div className="fixed inset-0 pointer-events-none opacity-20">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-600/30 blur-[120px] rounded-full animate-pulse" />
       </div>
 
-      <header className="sticky top-0 z-50 bg-[#0c111c]/80 backdrop-blur-3xl border-b border-white/5 px-6 md:px-10 h-20 flex items-center shadow-xl">
-        <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-indigo-500/10 px-4 md:px-8 h-16 flex items-center shadow-lg">
+        <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
           
-          <div className="flex items-center gap-12">
-            <button onClick={() => setIsHome(true)} className="flex items-center gap-3.5 group shrink-0">
-              <div className="bg-indigo-600 p-2.5 rounded-2xl shadow-lg group-hover:bg-indigo-500 transition-all group-hover:scale-105 active:scale-95">
-                <Home className="w-4 h-4 text-white" />
-              </div>
-              <span className="font-black text-sm tracking-widest uppercase hidden lg:block">Guitar Hub</span>
+          <div className="flex items-center gap-6">
+            <button onClick={() => setIsHome(true)} className="flex items-center gap-3 hover:opacity-80 transition-all group shrink-0">
+              <div className="bg-indigo-600 p-2 rounded-xl shadow-lg"><Home className="w-4 h-4 text-white" /></div>
+              <span className="font-black text-sm tracking-widest uppercase hidden sm:block">Guitar Hub</span>
             </button>
             
-            <nav className="hidden md:flex items-center gap-8">
-              <div className="relative" ref={historyRef}>
-                <button 
-                  onClick={() => { setShowHistoryDropdown(!showHistoryDropdown); setShowBookmarksDropdown(false); }}
-                  disabled={history.length === 0}
-                  className={`text-[11px] font-black uppercase tracking-[0.25em] transition-all flex items-center gap-2 ${history.length === 0 ? 'opacity-20 cursor-not-allowed' : 'text-slate-400 hover:text-white'}`}
-                >
-                  History
-                </button>
-                {showHistoryDropdown && (
-                  <div className="absolute top-12 left-0 w-72 bg-[#0c111c] border border-white/10 rounded-2xl shadow-2xl py-3 z-[60] animate-in fade-in slide-in-from-top-3">
-                    <div className="px-5 py-2 border-b border-white/5 flex justify-between items-center mb-2">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Jump Back</span>
-                      <button onClick={clearHistory} className="text-[9px] text-rose-500 font-bold hover:underline">Clear All</button>
-                    </div>
-                    <div className="max-h-64 overflow-y-auto custom-scrollbar">
-                      {history.map((item, idx) => (
-                        <button key={idx} onClick={() => handleSearch(item.name)} className="w-full text-left px-5 py-3 hover:bg-white/5 transition-colors text-sm font-bold truncate flex items-center gap-3">
-                           <RotateCcw size={12} className="text-slate-600" /> {item.name}
-                        </button>
-                      ))}
-                    </div>
+            <div className="relative" ref={historyRef}>
+              <button 
+                onClick={() => { setShowHistoryDropdown(!showHistoryDropdown); setShowBookmarksDropdown(false); }}
+                disabled={history.length === 0}
+                className={`text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${history.length === 0 ? 'opacity-20 cursor-not-allowed' : 'text-indigo-400 hover:text-indigo-300 active:scale-95'}`}
+              >
+                jump back
+              </button>
+              
+              {showHistoryDropdown && history.length > 0 && (
+                <div className="absolute top-10 left-0 w-64 bg-slate-900 border border-indigo-500/20 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="px-4 py-2 border-b border-white/5 mb-1 flex justify-between items-center">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">History</span>
+                    <button onClick={clearHistory} className="text-[8px] text-rose-500 hover:underline">Clear</button>
                   </div>
-                )}
-              </div>
+                  <div className="max-h-80 overflow-y-auto custom-scrollbar">
+                    {history.map((item, idx) => (
+                      <button 
+                        key={idx}
+                        onClick={() => handleSearch(item.name)}
+                        className="w-full text-left px-4 py-3 hover:bg-indigo-500/10 transition-colors flex items-center gap-3"
+                      >
+                        <History size={14} className="text-slate-600" />
+                        <span className="text-sm font-bold truncate" dir="auto">{item.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
-              <div className="relative" ref={bookmarksRef}>
-                <button 
-                  onClick={() => { setShowBookmarksDropdown(!showBookmarksDropdown); setShowHistoryDropdown(false); }}
-                  disabled={bookmarks.length === 0}
-                  className={`text-[11px] font-black uppercase tracking-[0.25em] transition-all flex items-center gap-2 ${bookmarks.length === 0 ? 'opacity-20 cursor-not-allowed' : 'text-slate-400 hover:text-white'}`}
-                >
-                  Bookmarks
-                </button>
-                {showBookmarksDropdown && (
-                  <div className="absolute top-12 left-0 w-72 bg-[#0c111c] border border-white/10 rounded-2xl shadow-2xl py-3 z-[60] animate-in fade-in slide-in-from-top-3">
-                    <div className="px-5 py-2 border-b border-white/5 mb-2">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Saved Favorites</span>
-                    </div>
-                    <div className="max-h-64 overflow-y-auto custom-scrollbar">
-                      {bookmarks.map((name, idx) => (
-                        <button key={idx} onClick={() => handleSearch(name)} className="w-full text-left px-5 py-3 hover:bg-white/5 transition-colors text-sm font-bold truncate flex items-center gap-3">
-                          <Star size={12} className="text-amber-500" fill="currentColor" /> {name}
-                        </button>
-                      ))}
-                    </div>
+            <div className="relative" ref={bookmarksRef}>
+              <button 
+                onClick={() => { setShowBookmarksDropdown(!showBookmarksDropdown); setShowHistoryDropdown(false); }}
+                disabled={bookmarks.length === 0}
+                className={`text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${bookmarks.length === 0 ? 'opacity-20 cursor-not-allowed' : 'text-amber-400 hover:text-amber-300 active:scale-95'}`}
+              >
+                bookmarks
+              </button>
+              
+              {showBookmarksDropdown && bookmarks.length > 0 && (
+                <div className="absolute top-10 left-0 w-64 bg-slate-900 border border-amber-500/20 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="px-4 py-2 border-b border-white/5 mb-1">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Saved Favorites</span>
                   </div>
-                )}
-              </div>
-            </nav>
+                  <div className="max-h-80 overflow-y-auto custom-scrollbar">
+                    {bookmarks.map((name, idx) => (
+                      <button 
+                        key={idx}
+                        onClick={() => handleSearch(name)}
+                        className="w-full text-left px-4 py-3 hover:bg-amber-500/10 transition-colors flex items-center gap-3"
+                      >
+                        <Star size={14} className="text-amber-500" fill="currentColor" />
+                        <span className="text-sm font-bold truncate" dir="auto">{name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-12 flex-1 justify-end">
-             {/* Unified Controls & Search alignment */}
-             <div className="flex items-center gap-12">
-               <div className="hidden md:flex items-center bg-white/5 p-1 rounded-full border border-white/5 h-11">
-                  <button 
-                    onClick={() => setShowTuner(!showTuner)} 
-                    className={`px-6 h-full rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${showTuner ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-white'}`}
-                  >
-                    <Mic2 size={12} /> Tuner
-                  </button>
-                  <button 
-                    onClick={() => setShowMetronome(!showMetronome)} 
-                    className={`px-6 h-full rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${showMetronome ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-white'}`}
-                  >
-                    <Timer size={12} /> Tempo
-                  </button>
-               </div>
-               
-               <div className="relative w-full max-w-sm">
-                  <form onSubmit={(e) => { e.preventDefault(); handleSearch(searchTerm); }}>
-                    <input 
-                      type="text" 
-                      value={searchTerm} 
-                      onChange={(e) => setSearchTerm(e.target.value)} 
-                      placeholder="Search song or chord..." 
-                      className="w-full h-11 bg-white/5 border border-white/10 rounded-full pl-12 pr-4 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all placeholder:text-slate-600" 
-                    />
-                    <Search className="absolute left-4.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  </form>
-               </div>
-             </div>
+          <div className="flex items-center bg-indigo-950/40 p-1 rounded-full border border-indigo-500/20">
+            <button onClick={() => setShowTuner(!showTuner)} className={`px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${showTuner ? 'bg-indigo-500 text-white' : 'text-slate-400'}`}>Tuner</button>
+            <button onClick={() => setShowMetronome(!showMetronome)} className={`px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${showMetronome ? 'bg-indigo-500 text-white' : 'text-slate-400'}`}>Tempo</button>
+          </div>
+
+          <div className="flex items-center gap-6 shrink-0">
+            <button 
+              onClick={handleRandomSong}
+              className="text-[11px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-all active:scale-95 hidden lg:block"
+            >
+              random song
+            </button>
+
+            <div ref={searchRef} className="relative w-full max-w-[200px]">
+              <form onSubmit={(e) => { e.preventDefault(); handleSearch(searchTerm); }}>
+                <input 
+                  type="text" 
+                  value={searchTerm} 
+                  onChange={(e) => setSearchTerm(e.target.value)} 
+                  placeholder="Song or Chord..." 
+                  className="w-full h-11 bg-indigo-950/40 border border-indigo-500/20 rounded-full pl-11 pr-4 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40" 
+                />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              </form>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Tools Floating UI */}
       {(showTuner || showMetronome) && (
-        <div className="fixed top-24 right-6 md:right-10 z-[70] w-80 space-y-6 animate-in slide-in-from-right-8 fade-in duration-300">
+        <div className="fixed top-[72px] right-4 md:right-8 z-40 w-80 space-y-4 animate-in slide-in-from-top-4 fade-in duration-300">
           {showTuner && <Tuner />}
           {showMetronome && <Metronome />}
         </div>
       )}
 
-      <main className="flex-1 max-w-7xl mx-auto w-full p-6 md:p-10 relative z-10">
+      <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-8 relative z-10">
         {loading ? (
-          <div className="h-[70vh] flex flex-col items-center justify-center gap-10">
+          <div className="h-[70vh] flex flex-col items-center justify-center gap-6 animate-in fade-in duration-500">
             <div className="relative">
-              <Activity className="w-20 h-20 text-indigo-500 animate-pulse" />
-              <div className="absolute inset-0 border-4 border-indigo-500/20 rounded-full animate-ping scale-150" />
+              <Activity className="w-16 h-16 text-indigo-400 animate-pulse" />
+              <div className="absolute inset-0 border-4 border-indigo-500/20 rounded-full animate-ping opacity-20" />
+              <div className="absolute -top-4 -right-4 bg-indigo-500 p-1.5 rounded-full shadow-lg"><Bolt size={14} className="text-white" /></div>
             </div>
-            <div className="text-center space-y-3">
-              <p className="text-indigo-400 text-sm font-black uppercase tracking-[0.5em]">Grounded Engine Active</p>
-              <p className="text-xs text-slate-600 font-bold uppercase tracking-widest">Masterclass AI generating roadmap...</p>
-            </div>
+            <p className="text-indigo-400 text-sm font-black uppercase tracking-[0.3em] animate-pulse">Scanning Live Sources...</p>
+            <span className="text-[10px] text-slate-600 uppercase tracking-widest">Powered by Gemini 3 Flash Masterclass Engine</span>
           </div>
         ) : isHome ? (
-          <div className="py-16 md:py-24 space-y-32 animate-in fade-in duration-1000">
-            <div className="text-center space-y-10 max-w-4xl mx-auto">
-              <div className="inline-flex items-center gap-3 px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full mb-4">
-                <Sparkles size={14} className="text-indigo-400" />
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">The Ultimate Hub for Guitarists</span>
+          <div className="max-w-6xl mx-auto py-8 space-y-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <div className="text-center space-y-6">
+              <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-tight bg-gradient-to-b from-white to-indigo-500/40 bg-clip-text text-transparent">Guitar Hub</h1>
+              <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto opacity-80">Grounded YouTube tutorials, signature rhythm charts, and real-time theory analysis.</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+               <div className="space-y-6">
+                <div className="flex items-center gap-3 text-amber-400">
+                  <Star size={20} strokeWidth={2.5} fill="currentColor" />
+                  <h3 className="text-sm font-black uppercase tracking-[0.2em]">Your Bookmarks</h3>
+                </div>
+                {bookmarks.length > 0 ? (
+                  <div className="flex flex-wrap gap-4">
+                    {bookmarks.map((name, idx) => (
+                      <button 
+                        key={idx} 
+                        onClick={() => handleSearch(name)} 
+                        className="px-6 py-4 bg-amber-500/5 hover:bg-amber-500/10 border border-amber-500/10 hover:border-amber-500/40 rounded-3xl transition-all hover:-translate-y-1 flex items-center gap-3"
+                      >
+                        <Bookmark size={14} className="text-amber-500" />
+                        <span className="text-sm font-bold text-slate-300" dir="auto">{name}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-600 font-bold uppercase tracking-widest border border-dashed border-white/5 p-8 rounded-3xl text-center">Save your favorite songs to see them here.</p>
+                )}
               </div>
-              <h1 className="text-7xl md:text-[10rem] font-black tracking-tighter leading-[0.85] bg-gradient-to-b from-white to-white/10 bg-clip-text text-transparent pb-4">GUITAR HUB</h1>
-              <p className="text-slate-400 text-xl md:text-2xl leading-relaxed font-medium max-w-3xl mx-auto opacity-80">Your personal AI-powered guitar masterclass. Real-time chords, signature patterns, and structural roadmaps.</p>
-              <div className="flex flex-wrap justify-center gap-6 pt-6">
-                <button onClick={handleRandomSong} className="px-10 py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] transition-all shadow-2xl shadow-indigo-600/30 active:scale-95 flex items-center gap-3">
-                  <Shuffle size={16} /> Explore Random Song
-                </button>
-                <button onClick={() => handleSearch('G Major')} className="px-10 py-5 bg-white/5 hover:bg-white/10 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] border border-white/5 transition-all">Quick Chord Finder</button>
+
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 text-indigo-400">
+                  <RotateCcw size={20} strokeWidth={2.5} />
+                  <h3 className="text-sm font-black uppercase tracking-[0.2em]">Jump Back</h3>
+                </div>
+                {history.length > 0 ? (
+                  <div className="flex flex-wrap gap-4">
+                    {history.map((item, idx) => (
+                      <button 
+                        key={idx} 
+                        onClick={() => handleSearch(item.name)} 
+                        className="px-6 py-4 bg-indigo-500/5 hover:bg-indigo-500/10 border border-white/5 hover:border-indigo-500/30 rounded-3xl transition-all hover:-translate-y-1 flex items-center gap-3"
+                      >
+                        <Music2 size={14} className="text-indigo-500" />
+                        <span className="text-sm font-bold text-slate-300" dir="auto">{item.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-600 font-bold uppercase tracking-widest border border-dashed border-white/5 p-8 rounded-3xl text-center">Recent searches will appear here.</p>
+                )}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-               {featuredSongs.map((song, i) => (
-                  <button key={i} onClick={() => handleSearch(`${song.title} ${song.artist}`)} className="group bg-[#0c111c]/40 border border-white/5 hover:border-indigo-500/40 rounded-[3rem] p-10 text-left transition-all hover:-translate-y-3 shadow-lg hover:shadow-indigo-500/5">
-                    <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase border border-white/10 w-fit mb-8 ${song.iconColor}`}>{song.difficulty}</div>
-                    <h4 className="text-3xl font-black text-white group-hover:text-indigo-400 transition-colors mb-2 truncate" dir="auto">{song.title}</h4>
-                    <p className="text-slate-500 text-sm font-bold uppercase tracking-[0.15em]">{song.artist}</p>
+            <div className="space-y-6 pt-12 border-t border-white/5">
+              <div className="flex items-center gap-3 text-emerald-400">
+                <Sparkles size={20} strokeWidth={2.5} />
+                <h3 className="text-sm font-black uppercase tracking-[0.2em]">Explore New Chords</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredSongs.map((song, i) => (
+                  <button key={i} onClick={() => handleSearch(`${song.title} ${song.artist}`)} className="bg-slate-900 border border-white/5 hover:border-indigo-500/30 rounded-[2.5rem] p-8 text-left transition-all hover:-translate-y-2 group">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border border-white/10 w-fit ${song.iconColor}`}>{song.difficulty}</div>
+                      <ArrowRight size={16} className="text-slate-700 group-hover:text-indigo-500 transition-colors" />
+                    </div>
+                    <h4 className="text-2xl font-black text-white mb-2 truncate" dir="auto">{song.title}</h4>
+                    <p className="text-slate-500 text-sm" dir="auto">{song.artist}</p>
                   </button>
-               ))}
+                ))}
+              </div>
             </div>
           </div>
-        ) : chord && songHeader ? (
-          <div className="max-w-7xl mx-auto space-y-16 animate-in fade-in duration-700 pb-24">
-            
-            {/* Song Hero Header */}
-            <div className="relative pt-10">
-              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12">
-                <div className="space-y-6 flex-1">
-                  <div className="flex flex-wrap items-center gap-6">
-                    <h2 className={`text-6xl md:text-9xl font-black tracking-tighter text-white break-words max-w-full ${isHebrew(songHeader.mainTitle) ? 'leading-[1.1]' : 'leading-none'}`} dir="auto">
-                      {songHeader.mainTitle}
-                    </h2>
-                    <button 
-                      onClick={() => toggleBookmark(chord.chordName)}
-                      className={`p-4 rounded-3xl border transition-all ${
-                        bookmarks.includes(chord.chordName) 
-                          ? 'bg-amber-500/20 border-amber-500 text-amber-500 shadow-xl shadow-amber-500/10' 
-                          : 'bg-white/5 border-white/10 text-slate-600 hover:text-amber-500 hover:border-amber-500'
-                      }`}
-                    >
-                      <Star size={32} fill={bookmarks.includes(chord.chordName) ? "currentColor" : "none"} />
-                    </button>
-                  </div>
-                  
-                  <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-                    <div className="flex flex-col">
-                      <span className="text-3xl font-black text-slate-400" dir="auto">by {songHeader.mainArtist}</span>
-                      {songHeader.subArtist && <span className="text-xs font-bold text-slate-600 uppercase tracking-widest mt-1">{songHeader.subArtist}</span>}
-                    </div>
-                    {songHeader.subTitle && (
-                      <div className="px-5 py-2 bg-white/5 border border-white/5 rounded-2xl">
-                        <span className="text-base font-bold text-slate-500 italic">"{songHeader.subTitle}"</span>
-                      </div>
-                    )}
-                    {chord.key && (
-                      <div className="flex items-center gap-2.5 px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl">
-                        <Music size={16} className="text-indigo-400" />
-                        <span className="text-xs font-black uppercase tracking-[0.25em] text-indigo-400">Key: {chord.key}</span>
-                      </div>
-                    )}
-                  </div>
+        ) : chord && !error ? (
+          <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-500 pb-20">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-6 flex-wrap">
+                  <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-white truncate max-w-full" dir="auto">
+                    {primaryTitle}
+                  </h2>
+                  <button 
+                    onClick={() => toggleBookmark(chord.chordName)}
+                    className={`p-4 rounded-full border transition-all ${
+                      bookmarks.includes(chord.chordName) 
+                        ? 'bg-amber-500/20 border-amber-500 text-amber-500' 
+                        : 'bg-white/5 border-white/10 text-slate-500 hover:text-amber-500 hover:border-amber-500/50'
+                    }`}
+                  >
+                    <Star size={32} fill={bookmarks.includes(chord.chordName) ? "currentColor" : "none"} strokeWidth={2.5} />
+                  </button>
                 </div>
-                
-                <div className="flex items-center gap-4 shrink-0">
-                  <a href={getSearchUrl('youtube')} target="_blank" className="bg-rose-600 hover:bg-rose-500 text-white p-5 rounded-3xl shadow-2xl shadow-rose-600/30 transition-all hover:scale-105 active:scale-95"><Youtube size={28} /></a>
-                  <a href={getSearchUrl('google')} target="_blank" className="bg-[#1e293b] hover:bg-[#334155] text-white p-5 rounded-3xl shadow-xl transition-all hover:scale-105 active:scale-95"><Search size={28} /></a>
+                <div className="flex flex-wrap items-baseline gap-4 mt-4">
+                  {primaryArtist && <p className="text-2xl font-black text-slate-500" dir="auto">by {primaryArtist}</p>}
+                  {secondaryTitle && <p className="text-xl font-bold text-slate-600 opacity-60 italic" dir="auto">({secondaryTitle})</p>}
+                  {secondaryArtist && <p className="text-sm font-bold text-slate-700 uppercase tracking-widest" dir="auto">/ {secondaryArtist}</p>}
+                  {chord.key && (
+                    <div className="flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+                      <Music size={14} className="text-indigo-400" />
+                      <span className="text-xs font-black uppercase tracking-widest text-indigo-400">Key: {chord.key}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Content Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-              <div className="lg:col-span-8 space-y-12">
-                {/* Main Chord Section */}
-                <div className="bg-[#0c111c]/60 p-10 md:p-14 rounded-[4rem] border border-white/5 backdrop-blur-xl shadow-2xl">
-                   <div className="flex items-center gap-3 mb-12 text-indigo-400">
-                      <Zap size={24} className="fill-current" />
-                      <h3 className="text-xs font-black uppercase tracking-[0.4em]">Essential Masterclass Shapes</h3>
-                   </div>
-
-                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-8 space-y-8">
+                <div className="bg-slate-900/50 p-6 md:p-10 rounded-[3rem] border border-white/5 shadow-2xl">
+                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
                       {currentChordsToDisplay.map((diag, i) => (
                         <ChordDiagram key={i} variation={diag} size="sm" isActive={activeShapeIndex === i} onClick={() => setActiveShapeIndex(i)} />
                       ))}
                    </div>
-
-                   <div className="mt-14 pt-14 border-t border-white/5 flex flex-col md:flex-row items-center gap-14">
-                      <div className="bg-slate-950 p-8 rounded-[3rem] border border-indigo-500/20 shadow-2xl shrink-0">
+                   <div className="mt-8 pt-8 border-t border-white/5 flex flex-col lg:flex-row items-start gap-10">
+                      <div className="bg-slate-950 p-6 rounded-[2.5rem] border border-indigo-500/20 shadow-inner shrink-0 sticky top-20">
                         <ChordDiagram variation={currentChordsToDisplay[activeShapeIndex] || currentChordsToDisplay[0]} />
                       </div>
-                      <div className="space-y-8 flex-1 text-center md:text-left">
-                        <div className="space-y-3">
-                          <h4 className="text-5xl font-black text-white italic tracking-tighter">"Lock it in."</h4>
-                          <div className="w-16 h-1 bg-indigo-500 rounded-full mx-auto md:mx-0" />
+                      
+                      <div className="flex-1 w-full space-y-8">
+                        <div className="flex items-center gap-3 text-indigo-400">
+                          <Map size={24} strokeWidth={2.5} />
+                          <h3 className="text-sm font-black uppercase tracking-[0.2em]">Song Roadmap</h3>
                         </div>
-                        <p className="text-slate-400 text-lg leading-relaxed font-medium">
-                          {chord.writtenTutorial || "Focus on ringing out every string clearly. If you see an 'X', ensure the string is fully muted with the edge of your fretting fingers."}
-                        </p>
-                        <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                           <div className="px-6 py-3 bg-indigo-500/5 border border-indigo-500/10 rounded-2xl text-xs font-black uppercase tracking-widest text-indigo-400">Standard E-A-D-G-B-E</div>
-                           <div className="px-6 py-3 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl text-xs font-black uppercase tracking-widest text-emerald-400">Clear Intonation Check</div>
+
+                        <div className="space-y-4">
+                          {chord.songStructure && chord.songStructure.length > 0 ? (
+                            chord.songStructure.map((part, idx) => (
+                              <div key={idx} className="bg-slate-950/60 p-6 rounded-3xl border border-white/5 hover:border-indigo-500/20 transition-all group">
+                                <div className="flex flex-col gap-3">
+                                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600 group-hover:text-indigo-400 transition-colors">
+                                    {part.section}
+                                  </span>
+                                  <div className="text-2xl font-black text-white tracking-wider flex flex-wrap gap-3 items-center" dir="ltr">
+                                    {part.chords.split('-').map((c, i) => (
+                                      <React.Fragment key={i}>
+                                        <span className="hover:text-indigo-300 transition-colors">{c.trim()}</span>
+                                        {i < part.chords.split('-').length - 1 && <ArrowRight size={14} className="text-slate-800" />}
+                                      </React.Fragment>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="p-8 bg-slate-950/40 rounded-3xl border border-dashed border-white/5 text-center">
+                              <p className="text-sm text-slate-500 font-medium">Standard structure data not available. Focus on the signature shapes above.</p>
+                            </div>
+                          )}
                         </div>
+
+                        {chord.writtenTutorial && (
+                           <div className="p-4 bg-indigo-500/5 rounded-2xl border border-indigo-500/10">
+                             <div className="flex items-center gap-2 mb-1 text-indigo-400">
+                               <Sparkles size={12} />
+                               <span className="text-[10px] font-black uppercase tracking-widest">Master Note</span>
+                             </div>
+                             <p className="text-xs text-slate-400 leading-relaxed italic" dir="auto">
+                               "{chord.writtenTutorial}"
+                             </p>
+                           </div>
+                        )}
                       </div>
                    </div>
                 </div>
-
                 <StrummingGuide pattern={displayPattern} name={displayPatternName} onNext={nextPattern} onPrev={prevPattern} />
               </div>
 
-              {/* Sidebar Content */}
-              <div className="lg:col-span-4 space-y-12">
-                <div className="bg-[#0c111c]/60 border border-white/5 rounded-[4rem] p-12 flex flex-col gap-12 backdrop-blur-xl shadow-2xl">
-                  <div className="space-y-8">
-                    <div className="flex items-center gap-4 text-emerald-400">
-                      <Map size={24} strokeWidth={2.5} />
-                      <h3 className="text-xs font-black uppercase tracking-[0.4em]">Progressive Roadmap</h3>
+              <div className="lg:col-span-4 space-y-8">
+                <div className="bg-slate-900 border border-white/5 rounded-[3rem] shadow-xl overflow-hidden flex flex-col p-8 space-y-12">
+                  
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3 text-rose-500">
+                      <Youtube size={24} strokeWidth={2.5} />
+                      <h3 className="text-sm font-black uppercase tracking-[0.2em]">Learning Lab</h3>
                     </div>
                     
-                    <div className="space-y-4">
-                      {chord.songStructure && chord.songStructure.length > 0 ? (
-                        chord.songStructure.map((part, idx) => (
-                          <div key={idx} className="bg-slate-950/80 p-8 rounded-[2.5rem] border border-white/5 group hover:border-indigo-500/40 transition-all shadow-inner">
-                             <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 group-hover:text-indigo-400 transition-colors mb-3 block">{part.section}</span>
-                             <div className="text-xl font-black text-white tracking-[0.15em] leading-relaxed" dir="ltr">
-                                {part.chords}
-                             </div>
+                    <a 
+                      href={getSearchUrl('youtube')} 
+                      target="_blank" 
+                      className="flex items-center justify-between p-6 bg-rose-500/10 border border-rose-500/20 rounded-[2rem] hover:bg-rose-500/20 transition-all group shadow-lg shadow-rose-500/5"
+                    >
+                      <div className="flex items-center gap-4">
+                          <Youtube className="text-rose-500" size={28} />
+                          <div className="flex flex-col">
+                            <span className="text-sm font-black text-rose-100 uppercase tracking-widest">YouTube Search</span>
+                            <span className="text-[10px] font-bold text-rose-500/60 uppercase">Guitar Tutorials</span>
                           </div>
-                        ))
-                      ) : (
-                        <div className="p-10 border border-dashed border-white/10 rounded-[2.5rem] text-center">
-                          <p className="text-xs text-slate-700 font-bold uppercase tracking-widest">Structural data processing...</p>
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                      <Search size={20} className="text-rose-400 group-hover:scale-110 transition-transform" />
+                    </a>
                   </div>
 
-                  <div className="space-y-8 pt-12 border-t border-white/5">
-                    <div className="flex items-center gap-4 text-indigo-400">
-                      <ListMusic size={24} strokeWidth={2.5} />
-                      <h3 className="text-xs font-black uppercase tracking-[0.4em]">Masterclass Assets</h3>
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3 text-indigo-400">
+                      <Globe size={24} strokeWidth={2.5} />
+                      <h3 className="text-sm font-black uppercase tracking-[0.2em]">Resource Hub</h3>
                     </div>
-                    <div className="flex flex-col gap-4">
-                      <a href={getSearchUrl('youtube')} target="_blank" className="flex items-center justify-between p-6 bg-rose-500/5 border border-rose-500/10 rounded-[2rem] hover:bg-rose-500/10 transition-all group">
-                         <div className="flex items-center gap-5">
-                           <Youtube className="text-rose-500" size={24} />
-                           <span className="text-xs font-black uppercase tracking-[0.15em] text-rose-100">Video Walkthrough</span>
-                         </div>
-                         <ArrowRight size={18} className="text-slate-700 group-hover:text-rose-400 transition-all" />
-                      </a>
-                      <a href={getSearchUrl('google')} target="_blank" className="flex items-center justify-between p-6 bg-indigo-500/5 border border-indigo-500/10 rounded-[2rem] hover:bg-indigo-500/10 transition-all group">
-                         <div className="flex items-center gap-5">
-                           <Globe className="text-indigo-500" size={24} />
-                           <span className="text-xs font-black uppercase tracking-[0.15em] text-indigo-100">Tabs & Scoring</span>
-                         </div>
-                         <ArrowRight size={18} className="text-slate-700 group-hover:text-indigo-400 transition-all" />
-                      </a>
-                    </div>
+
+                    <a 
+                      href={getSearchUrl('google')} 
+                      target="_blank" 
+                      className="flex items-center justify-between p-6 bg-indigo-500/10 border border-indigo-500/20 rounded-[2rem] hover:bg-indigo-500/20 transition-all group shadow-lg shadow-indigo-500/5"
+                    >
+                      <div className="flex items-center gap-4">
+                          <Search className="text-indigo-400" size={28} />
+                          <div className="flex flex-col">
+                            <span className="text-sm font-black text-indigo-100 uppercase tracking-widest">Google Search</span>
+                            <span className="text-[10px] font-bold text-indigo-500/60 uppercase">Chords & Tabs</span>
+                          </div>
+                      </div>
+                      <ExternalLink size={20} className="text-indigo-400 group-hover:scale-110 transition-transform" />
+                    </a>
+                  </div>
+
+                  <div className="pt-8 border-t border-white/5 opacity-40 text-center">
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Practice makes perfect</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         ) : error ? (
-          <div className="min-h-[65vh] flex flex-col items-center justify-center p-10 animate-in fade-in">
-             <div className="bg-[#0c111c] border border-white/10 p-16 rounded-[4rem] max-w-2xl w-full text-center space-y-10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)]">
-                <AlertCircle size={72} className="text-rose-500 mx-auto" />
-                <div className="space-y-5">
-                  <h2 className="text-4xl font-black text-white tracking-tighter">Roadmap Interrupted</h2>
-                  <p className="text-slate-400 text-xl leading-relaxed font-medium">{error}</p>
-                </div>
-                <div className="flex flex-wrap gap-5 justify-center pt-6">
-                  <button onClick={() => handleSearch(searchTerm)} className="px-12 py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] transition-all shadow-2xl shadow-indigo-600/30 active:scale-95 flex items-center gap-3"><RefreshCw size={16} /> Re-scan Core</button>
-                  <button onClick={() => setIsHome(true)} className="px-12 py-5 bg-white/5 hover:bg-white/10 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] border border-white/5 transition-all">Abort & Return</button>
+          <div className="min-h-[70vh] flex flex-col items-center justify-center text-center p-8 animate-in fade-in">
+             <div className="bg-slate-900/50 border border-white/5 p-12 rounded-[4rem] max-w-2xl w-full shadow-2xl">
+                <AlertCircle size={48} className="text-rose-500 mb-8 mx-auto" />
+                <h2 className="text-3xl font-black mb-4 text-white">Analysis Interrupted</h2>
+                <p className="text-slate-400 mb-10 text-lg leading-relaxed">{error}</p>
+                <div className="flex gap-4 justify-center">
+                  <button onClick={() => handleSearch(searchTerm)} className="px-10 py-4 bg-indigo-600 rounded-full font-black text-xs uppercase text-white flex items-center gap-2"><RefreshCw size={14} /> Retry</button>
+                  <button onClick={() => setIsHome(true)} className="px-10 py-4 bg-slate-800 rounded-full font-black text-xs uppercase text-white">Home</button>
                 </div>
              </div>
           </div>

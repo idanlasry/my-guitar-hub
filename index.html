@@ -11,10 +11,22 @@
             font-family: 'Inter', sans-serif;
             background-color: #05070a;
             color: #f8fafc;
-            overflow-x: hidden;
         }
         .mono {
             font-family: 'JetBrains Mono', monospace;
+        }
+        .animate-spin-slow {
+            animation: spin 8s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .clip-path-pyramid {
+            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+        }
+        .perspective-1000 {
+            perspective: 1000px;
         }
         /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar {
@@ -32,21 +44,17 @@
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: rgba(99, 102, 241, 0.4);
-        }
-        .perspective-1000 {
-            perspective: 1000px;
-        }
-        .clip-path-pyramid {
-            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+          background-clip: padding-box;
         }
     </style>
 <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
     "@google/genai": "https://esm.sh/@google/genai@^1.37.0",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react-dom": "https://esm.sh/react-dom@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
     "vite": "https://esm.sh/vite@^7.3.1",
     "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
