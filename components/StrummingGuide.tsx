@@ -1,16 +1,16 @@
 
 import React from 'react';
+/* Added Timer to the lucide-react imports */
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, X as MuteIcon, Book, Timer } from 'lucide-react';
 
 interface StrummingGuideProps {
   pattern: string; // "D,_,D,_,D,U,D,U"
   name: string;
-  nativeName?: string;
   onNext: () => void;
   onPrev: () => void;
 }
 
-const StrummingGuide: React.FC<StrummingGuideProps> = ({ pattern, name, nativeName, onNext, onPrev }) => {
+const StrummingGuide: React.FC<StrummingGuideProps> = ({ pattern, name, onNext, onPrev }) => {
   const steps = pattern.split(',');
   const counts = ["1", "&", "2", "&", "3", "&", "4", "&"];
 
@@ -44,18 +44,9 @@ const StrummingGuide: React.FC<StrummingGuideProps> = ({ pattern, name, nativeNa
             </h3>
           </div>
           <div className="flex flex-wrap items-center gap-4">
-            <div className="flex flex-col">
-              {/* Primary large title for the strumming pattern */}
-              <h4 className="text-3xl md:text-4xl font-black text-white tracking-tight leading-tight group-hover:text-indigo-300 transition-colors" dir={nativeName ? "rtl" : "ltr"}>
-                {nativeName || name}
-              </h4>
-              {/* Sub-label if both native and English names are present */}
-              {nativeName && name && (
-                 <span className="text-sm font-bold text-indigo-500/60 mt-1 uppercase tracking-widest">
-                    {name}
-                 </span>
-              )}
-            </div>
+            <h4 className="text-3xl md:text-4xl font-black text-white tracking-tight leading-tight group-hover:text-indigo-300 transition-colors">
+              {name}
+            </h4>
             <div className="flex items-center gap-1.5 p-1.5 bg-white/5 rounded-2xl border border-white/5 shadow-inner">
                <button 
                 onClick={onPrev}
@@ -84,6 +75,7 @@ const StrummingGuide: React.FC<StrummingGuideProps> = ({ pattern, name, nativeNa
         </div>
       </div>
 
+      {/* Rhythmic Grid - Highly Tangible Icons */}
       <div className="grid grid-cols-4 sm:grid-cols-8 gap-4 md:gap-6 relative z-10">
         {steps.map((step, idx) => {
           const isDown = step === 'D';
@@ -95,6 +87,7 @@ const StrummingGuide: React.FC<StrummingGuideProps> = ({ pattern, name, nativeNa
 
           return (
             <div key={idx} className="flex flex-col items-center gap-5 group/step">
+              {/* Beats/Count Display */}
               <div className="flex flex-col items-center gap-1.5">
                 <span className={`text-xl md:text-2xl font-black transition-all duration-300 ${isPrimaryBeat ? 'text-white scale-110' : 'text-slate-700'}`}>
                   {count}
@@ -102,6 +95,7 @@ const StrummingGuide: React.FC<StrummingGuideProps> = ({ pattern, name, nativeNa
                 <div className={`w-1.5 h-1.5 rounded-full ${isPrimaryBeat ? 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]' : 'bg-slate-800'}`} />
               </div>
 
+              {/* Arrow/Action Container */}
               <div className={`w-full aspect-[4/5] flex items-center justify-center rounded-2xl md:rounded-[2rem] border transition-all duration-300 ${
                 isRest 
                   ? 'bg-transparent border-dashed border-white/10' 
@@ -114,6 +108,7 @@ const StrummingGuide: React.FC<StrummingGuideProps> = ({ pattern, name, nativeNa
                 {renderIcon(step)}
               </div>
 
+              {/* Descriptor */}
               <div className="flex flex-col items-center h-4">
                 {!isRest && (
                    <span className="text-[8px] font-black mono text-slate-700 uppercase tracking-widest opacity-0 group-hover/step:opacity-100 transition-opacity">
@@ -126,6 +121,7 @@ const StrummingGuide: React.FC<StrummingGuideProps> = ({ pattern, name, nativeNa
         })}
       </div>
       
+      {/* Progress Decoration */}
       <div className="mt-10 flex justify-center gap-1 opacity-20 group-hover:opacity-40 transition-opacity">
          {[...Array(24)].map((_, i) => (
            <div key={i} className="w-0.5 h-4 bg-slate-700 rounded-full" />

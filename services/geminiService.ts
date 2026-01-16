@@ -32,7 +32,7 @@ export const fetchChordData = async (input: string): Promise<ChordData> => {
       VERIFICATION RULES:
       1. Use Google Search to find functional YouTube tutorials and Hebrew/English chord sites (Ultimate-Guitar, Tab4u, etc).
       2. Identify the SONG STRUCTURE (Verse, Chorus, Bridge chord progressions) and the MUSICAL KEY.
-      3. CRITICAL: If the song is Hebrew/Israeli, you MUST provide 'nativeName' (song title in Hebrew) and 'nativeArtistName' (artist name in Hebrew). This is essential for localization.
+      3. IMPORTANT: If the song is in Hebrew, always provide the 'nativeName' and 'nativeArtistName' in Hebrew.
       
       OUTPUT REQUIREMENTS:
       - Return ONLY a single JSON object.
@@ -41,10 +41,10 @@ export const fetchChordData = async (input: string): Promise<ChordData> => {
       
       JSON SCHEMA:
       {
-        "chordName": string, (Transliterated or English name)
-        "nativeName": string, (Song title in original language, e.g., Hebrew)
-        "artistName": string, (Transliterated or English artist)
-        "nativeArtistName": string, (Artist name in original language, e.g., Hebrew)
+        "chordName": string,
+        "nativeName": string,
+        "artistName": string,
+        "nativeArtistName": string,
         "key": string,
         "notes": string[],
         "intervals": string[],
