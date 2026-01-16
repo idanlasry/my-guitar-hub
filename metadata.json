@@ -1,0 +1,7 @@
+{
+  "name": "my guitar hub",
+  "description": "A high-performance guitar chord dashboard featuring AI-powered theory breakdowns, chord diagrams, functional metronome, and tuner UI.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
