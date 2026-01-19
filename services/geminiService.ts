@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { ChordData } from "../types";
 
@@ -30,12 +29,14 @@ export const fetchChordData = async (input: string): Promise<ChordData> => {
       contents: `Search for guitar masterclass data for: "${input}".
 
       VERIFICATION RULES:
-      1. Use Google Search to find functional YouTube tutorials and Hebrew/English chord sites (Ultimate-Guitar, Tab4u, etc).
-      2. Identify the SONG STRUCTURE (Verse, Chorus, Bridge chord progressions) and the MUSICAL KEY.
-      3. IMPORTANT: If the song is in Hebrew, always provide the 'nativeName' and 'nativeArtistName' in Hebrew.
+      1. Use Google Search to find functional YouTube tutorials and Hebrew/English chord sites.
+      2. For Hebrew songs, PRIORITIZE data from tab4u.com. Ensure chords match their specific transcriptions.
+      3. Identify the SONG STRUCTURE (Verse, Chorus, Bridge chord progressions) and the MUSICAL KEY.
+      4. IMPORTANT: If the song is in Hebrew, always provide the 'nativeName' and 'nativeArtistName' in Hebrew.
       
       OUTPUT REQUIREMENTS:
       - Return ONLY a single JSON object.
+      - 'chordSheet' must contain full lyrics with chords in brackets placed immediately BEFORE the word they belong to, e.g., "[Am] HebrewText".
       - 'songStructure' must contain the chord order for Verse, Chorus, etc. (e.g., "G - D - Em7 - Cadd9").
       - NO long text descriptions. Keep it structural.
       
@@ -51,6 +52,7 @@ export const fetchChordData = async (input: string): Promise<ChordData> => {
         "strummingPattern": string,
         "isSongMatch": boolean,
         "isAmbiguous": boolean,
+        "chordSheet": string,
         "songStructure": [{"section": "Verse", "chords": "G - D - Em7 - C"}, {"section": "Chorus", "chords": "G - D - Em7 - C"}],
         "writtenTutorial": "Short 1-sentence tip",
         "externalLinks": [{"site": string, "url": string}],
@@ -61,8 +63,7 @@ export const fetchChordData = async (input: string): Promise<ChordData> => {
       
       Note: Use -1 for muted strings in 'frets'. Zero text outside JSON.`,
       config: {
-        tools: [{ googleSearch: {} }],
-        thinkingConfig: { thinkingBudget: 0 }
+        tools: [{ googleSearch: {} }]
       }
     });
 

@@ -1,6 +1,4 @@
-
 export interface ChordVariation {
-  // Corrected typo from freets to frets to match usage in components and services
   frets: (number | null)[]; // null means muted/don't play, 0 means open
   label: string;
 }
@@ -27,11 +25,17 @@ export interface ExternalLink {
   url: string;
 }
 
+export interface LyricsData {
+  plainLyrics?: string;
+  syncedLyrics?: string;
+  instrumental?: boolean;
+}
+
 export interface ChordData {
   chordName: string;
-  nativeName?: string; // Original language name (e.g., Hebrew)
+  nativeName?: string; 
   artistName?: string;
-  nativeArtistName?: string; // Original language artist name
+  nativeArtistName?: string; 
   notes: string[];
   intervals: string[];
   strummingPattern: string;
@@ -50,6 +54,8 @@ export interface ChordData {
   songBackground?: string;
   artistBackground?: string;
   key?: string;
+  lyrics?: LyricsData;
+  chordSheet?: string;
 }
 
 export enum TuningStatus {
