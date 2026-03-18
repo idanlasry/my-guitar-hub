@@ -13,10 +13,10 @@ const ChordDiagram: React.FC<ChordDiagramProps> = ({ variation, size = 'md', onC
   const { frets, label } = variation;
   
   const isSmall = size === 'sm';
-  const width = isSmall ? 100 : 140;
-  const height = isSmall ? 130 : 180;
+  const width = isSmall ? 80 : 140;
+  const height = isSmall ? 100 : 180;
   const margin = isSmall 
-    ? { top: 20, right: 15, bottom: 15, left: 15 }
+    ? { top: 15, right: 10, bottom: 10, left: 10 }
     : { top: 30, right: 20, bottom: 20, left: 20 };
   
   const fretCount = 5;
@@ -35,13 +35,13 @@ const ChordDiagram: React.FC<ChordDiagramProps> = ({ variation, size = 'md', onC
   return (
     <button 
       onClick={onClick}
-      className={`flex flex-col items-center rounded-3xl p-3 border transition-all duration-300 outline-none ${
+      className={`flex flex-col items-center rounded-2xl md:rounded-3xl p-2 md:p-3 border transition-all duration-300 outline-none shrink-0 ${
         isActive 
           ? 'bg-indigo-600/20 border-indigo-500 shadow-lg shadow-indigo-500/20' 
           : 'bg-slate-900/50 border-white/5 hover:border-indigo-500/30 active:scale-95'
       }`}
     >
-      <span className={`font-black text-white mb-2 uppercase tracking-widest ${isSmall ? 'text-[9px]' : 'text-[11px]'}`}>
+      <span className={`font-black text-white mb-1.5 md:mb-2 uppercase tracking-widest ${isSmall ? 'text-[8px]' : 'text-[11px]'}`}>
         {label}
       </span>
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="drop-shadow-md">
@@ -52,7 +52,7 @@ const ChordDiagram: React.FC<ChordDiagramProps> = ({ variation, size = 'md', onC
             x2={width - margin.right} 
             y2={margin.top} 
             stroke="#f8fafc" 
-            strokeWidth={isSmall ? "2" : "4"} 
+            strokeWidth={isSmall ? "1.5" : "4"} 
           />
         )}
 
@@ -76,16 +76,16 @@ const ChordDiagram: React.FC<ChordDiagramProps> = ({ variation, size = 'md', onC
             x2={margin.left + i * stringSpacing}
             y2={margin.top + innerHeight}
             stroke="#64748b"
-            strokeWidth={isSmall ? 1 : 1 + i * 0.2} 
+            strokeWidth={isSmall ? 0.75 : 1 + i * 0.2} 
           />
         ))}
 
         {startingFret > 1 && (
           <text 
-            x={margin.left - (isSmall ? 8 : 12)} 
-            y={margin.top + fretSpacing / 2 + 4} 
+            x={margin.left - (isSmall ? 6 : 12)} 
+            y={margin.top + fretSpacing / 2 + 3} 
             fill="#94a3b8" 
-            fontSize={isSmall ? "8" : "10"} 
+            fontSize={isSmall ? "7" : "10"} 
             className="mono font-bold"
           >
             {startingFret}fr
@@ -96,12 +96,12 @@ const ChordDiagram: React.FC<ChordDiagramProps> = ({ variation, size = 'md', onC
           const x = margin.left + stringIndex * stringSpacing;
           if (fret === null) {
             return (
-              <text key={`muted-${stringIndex}`} x={x - 4} y={margin.top - 8} fill="#ef4444" fontSize={isSmall ? "10" : "12"} fontWeight="black">×</text>
+              <text key={`muted-${stringIndex}`} x={x - 3} y={margin.top - 5} fill="#ef4444" fontSize={isSmall ? "8" : "12"} fontWeight="black">×</text>
             );
           }
           if (fret === 0) {
             return (
-              <circle key={`open-${stringIndex}`} cx={x} cy={margin.top - 10} r={isSmall ? "2.5" : "4"} fill="none" stroke="#22c55e" strokeWidth="2" />
+              <circle key={`open-${stringIndex}`} cx={x} cy={margin.top - 6} r={isSmall ? "1.5" : "4"} fill="none" stroke="#22c55e" strokeWidth={isSmall ? "1" : "2"} />
             );
           }
           const displayFret = fret - startingFret + 1;
@@ -111,7 +111,7 @@ const ChordDiagram: React.FC<ChordDiagramProps> = ({ variation, size = 'md', onC
                 key={`dot-${stringIndex}`} 
                 cx={x} 
                 cy={margin.top + (displayFret - 0.5) * fretSpacing} 
-                r={isSmall ? "4.5" : "7"} 
+                r={isSmall ? "3.5" : "7"} 
                 fill="#6366f1" 
                 className="animate-in zoom-in-0 duration-300"
               />

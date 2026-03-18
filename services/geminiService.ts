@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { ChordData } from "../types";
 
@@ -15,7 +16,7 @@ function extractJSON(text: string): any {
       try {
         return JSON.parse(jsonMatch[0]);
       } catch (innerE) {
-        throw new Error("Grounded search failed to format correctly. Please try again.");
+        throw new Error("Analysis failed to format correctly. Please try again.");
       }
     }
     throw new Error("Analysis incomplete. Try a different song or artist.");
@@ -26,44 +27,38 @@ export const fetchChordData = async (input: string): Promise<ChordData> => {
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Search for guitar masterclass data for: "${input}".
-
-      VERIFICATION RULES:
-      1. Use Google Search to find functional YouTube tutorials and Hebrew/English chord sites.
-      2. For Hebrew songs, PRIORITIZE data from tab4u.com. Ensure chords match their specific transcriptions.
-      3. Identify the SONG STRUCTURE (Verse, Chorus, Bridge chord progressions) and the MUSICAL KEY.
-      4. IMPORTANT: If the song is in Hebrew, always provide the 'nativeName' and 'nativeArtistName' in Hebrew.
-      
-      OUTPUT REQUIREMENTS:
-      - Return ONLY a single JSON object.
-      - 'chordSheet' must contain full lyrics with chords in brackets placed immediately BEFORE the word they belong to, e.g., "[Am] HebrewText".
-      - 'songStructure' must contain the chord order for Verse, Chorus, etc. (e.g., "G - D - Em7 - Cadd9").
-      - NO long text descriptions. Keep it structural.
-      
-      JSON SCHEMA:
-      {
-        "chordName": string,
-        "nativeName": string,
-        "artistName": string,
-        "nativeArtistName": string,
-        "key": string,
-        "notes": string[],
-        "intervals": string[],
-        "strummingPattern": string,
-        "isSongMatch": boolean,
-        "isAmbiguous": boolean,
-        "chordSheet": string,
-        "songStructure": [{"section": "Verse", "chords": "G - D - Em7 - C"}, {"section": "Chorus", "chords": "G - D - Em7 - C"}],
-        "writtenTutorial": "Short 1-sentence tip",
-        "externalLinks": [{"site": string, "url": string}],
-        "songChordDiagrams": [{"label": string, "frets": (number|null)[]}],
-        "tutorials": [{"title": string, "url": string}],
-        "variations": [{"label": string, "frets": (number|null)[]}]
-      }
-      
-      Note: Use -1 for muted strings in 'frets'. Zero text outside JSON.`,
+      contents: `Search and analyze: "${input}". 
+      If the query is in Hebrew or refers to an Israeli artist, prioritize local Israeli music theory and Hebrew lyrics.`,
       config: {
-        tools: [{ googleSearch: {} }]
+        systemInstruction: `You are a specialized Guitar Masterclass Engine with deep expertise in both Western and Israeli/Hebrew music.
+        
+        GOAL: Return a full song transcription optimized for speed and accuracy.
+        
+        LANGUAGE DETECTION:
+        - If the query contains Hebrew characters, prioritize Israeli artists/songs.
+        - ALWAYS provide 'nativeName' and 'nativeArtistName' in Hebrew script for Hebrew content.
+        
+        CHORD SHEET FORMATTING:
+        - Chords MUST be in [BRACKETS] like [Am].
+        - For HEBREW lyrics: Place chords [Am] directly to the LEFT of the word/syllable they apply to. The text direction will be RTL, but chords stay LTR.
+        - Ensure rhythmic accuracy.
+        
+        JSON SCHEMA:
+        {
+          "chordName": "English title",
+          "nativeName": "Hebrew title if applicable",
+          "artistName": "English artist",
+          "nativeArtistName": "Hebrew artist if applicable",
+          "key": string,
+          "notes": string[],
+          "intervals": string[],
+          "strummingPattern": string,
+          "isSongMatch": boolean,
+          "chordSheet": "Multi-line string with chords in brackets",
+          "songStructure": [{"section": string, "chords": string}],
+          "writtenTutorial": string,
+          "songChordDiagrams": [{"label": string, "frets": (number|null)[]}]
+        }`
       }
     });
 
@@ -72,22 +67,7 @@ export const fetchChordData = async (input: string): Promise<ChordData> => {
     }
 
     const rawData = extractJSON(response.text.trim());
-    
     const mapFret = (f: number | null) => (f === -1 ? null : f);
-
-    const tutorials = (rawData.tutorials || []).map((t: any) => {
-      let youtubeId = '';
-      if (t.url) {
-        const match = t.url.match(/(?:v=|\/)([0-9A-Za-z_-]{11}).*/);
-        if (match) youtubeId = match[1];
-      }
-      return { ...t, youtubeId };
-    }).filter((t: any) => t.url && (t.url.includes('youtube.com') || t.url.includes('youtu.be')));
-
-    const variations = (rawData.variations || []).map((v: any) => ({
-      ...v,
-      frets: Array.isArray(v.frets) ? v.frets.map(mapFret) : []
-    }));
 
     const songChordDiagrams = (rawData.songChordDiagrams || []).map((d: any) => ({
       ...d,
@@ -96,8 +76,7 @@ export const fetchChordData = async (input: string): Promise<ChordData> => {
 
     return {
       ...rawData,
-      tutorials,
-      variations: variations.slice(0, 3),
+      variations: [], // Not needed for song search
       songChordDiagrams: songChordDiagrams.length > 0 ? songChordDiagrams : undefined
     };
   } catch (error) {
